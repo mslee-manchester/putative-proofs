@@ -1,0 +1,49 @@
+package org.semanticweb.owl.explanation.lemmas;
+
+import java.util.ArrayList;
+import java.util.Set;
+
+import org.semanticweb.owl.explanation.api.Explanation;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.OWLAxiom;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
+
+public class PutativeProofGenerator {
+
+	private Set<OWLReasonerFactory> reasoners;
+	
+	public PutativeProofGenerator(Set<OWLReasonerFactory> reasoners){
+		this.reasoners = reasoners;
+	}
+	
+	public PutativeProof producePutativeProof(Proof pr) throws OWLOntologyCreationException{
+		Set<OWLAxiom> putativeLemmas = pr.getMap().keySet();
+		OWLOntologyManager ontoman = OWLManager.createOWLOntologyManager();
+		ArrayList<String> ayes = new ArrayList<String>();
+		ArrayList<String> nays = new ArrayList<String>();
+		for(OWLAxiom ax:putativeLemmas)
+		{
+			Explanation<OWLAxiom> exp = pr.getRegularJustification(ax);
+			OWLOntology ont = ontoman.createOntology(exp.getAxioms());
+			for(OWLReasonerFactory reasonerFactory:reasoners)
+			{
+				OWLReasoner reasoner = reasonerFactory.createReasoner(ont);
+				if(reasoner.isEntailed(exp.getEntailment()))
+				{
+					ayes.add(reasonerFactory.getReasonerName());
+				}
+				else
+				{
+					nays.add(reasonerFactory.getReasonerName());
+				}
+			}
+		}
+		
+		
+		return null;
+	}
+}

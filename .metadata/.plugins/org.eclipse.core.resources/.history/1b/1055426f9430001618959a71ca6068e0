@@ -1,0 +1,33 @@
+package org.semanticweb.owl.explanation.lemmas;
+
+import java.util.Map;
+
+import org.semanticweb.owl.explanation.api.Explanation;
+import org.semanticweb.owlapi.model.OWLAxiom;
+
+public class PutativeProof extends Proof {
+	
+	private Map<OWLAxiom, Explanation<OWLAxiom>> map;
+
+    private Explanation<OWLAxiom> root;
+
+    private Explanation<OWLAxiom> regularJustification;
+
+    private Map<OWLAxiom, Explanation<OWLAxiom>> regularJustifications;
+    
+    private Map<OWLAxiom, String> disagreements;
+	
+	public PutativeProof(Explanation<OWLAxiom> regularJustification, Map<OWLAxiom, Explanation<OWLAxiom>> map, Map<OWLAxiom, Explanation<OWLAxiom>> regularJustifications, Map<OWLAxiom,String> disagreements) {
+		super(regularJustification, map, regularJustifications);
+		this.disagreements = disagreements;
+	}
+	
+	public void produceDisagreements(){
+		for(OWLAxiom ax:disagreements.keySet())
+		{
+			System.out.println(this.getRegularJustification(ax));
+			System.out.println(disagreements.get(ax));
+			System.out.println("");
+		}
+	}
+}

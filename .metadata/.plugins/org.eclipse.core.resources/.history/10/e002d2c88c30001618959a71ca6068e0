@@ -1,0 +1,5 @@
+package org.semanticweb.owl.explanation.lemmas;
+
+public class PutativeProof {
+
+}

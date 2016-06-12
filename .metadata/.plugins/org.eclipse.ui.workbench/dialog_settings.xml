@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.internal.QuickAccess">
+		<item value="669" key="dialogHeight"/>
+		<item value="1194" key="dialogWidth"/>
+		<list key="textEntries">
+		</list>
+		<list key="orderedElements">
+		</list>
+		<list key="orderedProviders">
+		</list>
+		<list key="textArray">
+		</list>
+	</section>
+	<section name="NewWizardAction">
+	</section>
+	<section name="ZipFileImportWizard">
+		<item value="false" key="WizardZipFileResourceImportPage1.STORE_OVERWRITE_EXISTING_RESOURCES_ID"/>
+		<list key="WizardZipFileResourceImportPage1.STORE_SOURCE_NAMES_ID">
+			<item value="/home/michael/Downloads/pellet-master.zip"/>
+			<item value="/home/michael/Downloads/justificationorientedproofs.zip"/>
+		</list>
+	</section>
+	<section name="ImportExportAction">
+		<item value="org.eclipse.ui.wizards.import.ZipFile" key="ImportExportPage.STORE_SELECTED_IMPORT_WIZARD_ID"/>
+		<list key="ImportExportPage.STORE_EXPANDED_IMPORT_CATEGORIES">
+			<item value="org.eclipse.ui.Basic"/>
+		</list>
+	</section>
+	<section name="FileSystemImportWizard">
+		<item value="false" key="WizardFileSystemResourceImportPage1.STORE_CREATE_CONTAINER_STRUCTURE_ID"/>
+		<item value="false" key="WizardFileSystemResourceImportPage1.STORE_OVERWRITE_EXISTING_RESOURCES_ID"/>
+		<list key="WizardFileSystemResourceImportPage1.STORE_SOURCE_NAMES_ID">
+			<item value="/home/michael/Downloads/pellet-master/owlapiv3/src/main/java"/>
+			<item value="/home/michael/Downloads/jfact-1.2.3.jar (OWLAPI 3.5(2).0 and Protege plugin)_FILES"/>
+			<item value="/home/michael/Downloads/jfact-1.2.3.jar (OWLAPI 3.5(2).0 and Protege plugin)_FILES/uk"/>
+			<item value="/home/michael/Downloads/justificationorientedproofs/justificationorientedproofs/src/main/java"/>
+			<item value="/home/michael/Downloads/justificationorientedproofs/justificationorientedproofs/src/main"/>
+		</list>
+	</section>
+</section>

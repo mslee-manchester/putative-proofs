@@ -1,0 +1,440 @@
+package org.semanticweb.owl.explanation.lemmas;
+
+import org.semanticweb.owl.explanation.api.Explanation;
+import org.semanticweb.owl.explanation.api.ExplanationGenerator;
+import org.semanticweb.owl.explanation.api.ExplanationManager;
+import org.semanticweb.owl.explanation.api.ExplanationException;
+import org.semanticweb.owl.explanation.impl.laconic.OPlusGenerator;
+import org.semanticweb.owl.explanation.proofs.SubConceptGenerator;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
+import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.util.OWLObjectVisitorExAdapter;
+import org.semanticweb.owlapi.util.OWLObjectWalker;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;/*
+ * Copyright (C) 2008, University of Manchester
+ *
+ * Modifications to the initial code base are copyright of their
+ * respective authors, or their employers as appropriate.  Authorship
+ * of the modifications may be determined from the ChangeLog placed at
+ * the end of this file.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+/**
+ * Author: Matthew Horridge<br> The University of Manchester<br> Information Management Group<br>
+ * Date: 22-Dec-2008
+ */
+public class DefaultCandidateLemmaGenerator<E> extends CandidateLemmaGenerator<E> {
+
+    public DefaultCandidateLemmaGenerator(OWLReasonerFactory reasonerFactory, OWLDataFactory dataFactory) {
+        super(reasonerFactory, dataFactory);
+    }
+
+    public Set<OWLAxiom> getCandidateLemmas(final Explanation<E> explanation) {
+
+//        SubConceptGenerator subConceptGenerator = new SubConceptGenerator(getDataFactory());
+//        System.out.println("Generating subconcepts....");
+//        Set<OWLClassExpression> classExpressions = subConceptGenerator.getExpandedSubConcepts((Explanation<OWLAxiom>) explanation);
+//        int n = 0;
+//        for(OWLClassExpression ce : classExpressions) {
+//            n++;
+//            System.out.println(n + " " + ce);
+//        }
+
+        final Set<OWLAxiom> lemmas = new HashSet<OWLAxiom>();
+
+//        OPlusGenerator oPlusGenerator = new OPlusGenerator(getDataFactory());
+//        for(OWLAxiom ax : explanation.getAxioms()) {
+//            for(OWLAxiom oplusAx : ax.accept(oPlusGenerator)) {
+//                addIfEntailed(oplusAx, explanation, lemmas);
+//            }
+//        }
+
+        try {
+            // Direct Synonyms of top, and synonyms of bottom
+            final LemmatisationPreferences prefs = LemmatisationPreferences.getInstance();
+                OWLOntologyManager man = OWLManager.createOWLOntologyManager();
+                OWLOntology ont = man.createOntology(explanation.getAxioms());
+
+            if (prefs.isLemmaTypeEnabled(LemmaType.TOP_BOT_SYNONYM)) {
+
+                OWLReasoner reasoner = getReasonerFactory().createReasoner(ont);
+                OWLClass thing = man.getOWLDataFactory().getOWLThing();
+                Set<OWLClass> synsOfTop = reasoner.getEquivalentClasses(thing).getEntitiesMinusTop();
+                for (OWLClass cls : synsOfTop) {
+                    lemmas.add(man.getOWLDataFactory().getOWLSubClassOfAxiom(thing, cls));
+                }
+                OWLClass nothing = man.getOWLDataFactory().getOWLNothing();
+                Set<OWLClass> sysnOfBot = reasoner.getEquivalentClasses(nothing).getEntitiesMinusBottom();
+                for (OWLClass cls : sysnOfBot) {
+                    lemmas.add(man.getOWLDataFactory().getOWLSubClassOfAxiom(cls, nothing));
+                }
+                reasoner.dispose();
+            }
+
+            if(prefs.isLemmaTypeEnabled(LemmaType.LHS_CONJUNCTS)) {
+                ExplanationGenerator<OWLAxiom> laconicExpGen = createExplanationGenerator(explanation);
+                Set<Explanation<OWLAxiom>> laconicExpls = laconicExpGen.getExplanations((OWLAxiom) explanation.getEntailment(), 1);
+                for (Explanation<OWLAxiom> expl : laconicExpls) {
+                    for (OWLAxiom ax : expl.getAxioms()) {
+                        if (ax instanceof OWLSubClassOfAxiom) {
+                            OWLSubClassOfAxiom sca = (OWLSubClassOfAxiom) ax;
+                            if (sca.getSubClass() instanceof OWLObjectIntersectionOf) {
+                                OWLObjectIntersectionOf intersectionOf = (OWLObjectIntersectionOf) sca.getSubClass();
+                                for (OWLClassExpression desc : intersectionOf.asConjunctSet()) {
+                                    for (OWLClassExpression cls : getClassesInSignature(explanation)) {
+                                        OWLSubClassOfAxiom infAx = getDataFactory().getOWLSubClassOfAxiom(cls, desc);
+                                        addIfEntailed(infAx, explanation, lemmas);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+//            if (prefs.isLemmaTypeEnabled(LemmaType.CONTRAPOSED_SUBCLASS_OF)) {
+//                for(OWLAxiom ax : explanation.getAxioms()) {
+//                    if(ax instanceof OWLSubClassOfAxiom) {
+//                        OWLSubClassOfAxiom sca = (OWLSubClassOfAxiom) ax;
+//                        OWLClassExpression negSub = man.getOWLDataFactory().getOWLObjectComplementOf(sca.getSuperClass()).getNNF();
+//                        OWLClassExpression negSup = man.getOWLDataFactory().getOWLObjectComplementOf(sca.getSubClass()).getNNF();
+//                        addIfEntailed(man.getOWLDataFactory().getOWLSubClassOfAxiom(negSub, negSup), explanation, lemmas);
+//                    }
+//                }
+//            }
+
+
+            for (final OWLClassExpression clsA : getClassesInSignature(explanation)) {
+                // Named subsumptions
+                if (clsA.isOWLNothing() || clsA.isOWLThing()) {
+                    continue;
+                }
+
+
+                if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_NAMED_CLASS)) {
+                    for (OWLClassExpression clsB : getClassesInSignature(explanation)) {
+                        if (!clsB.equals(clsA) && !clsB.isOWLThing() && !clsA.isOWLNothing()) {
+                            OWLSubClassOfAxiom sca = getDataFactory().getOWLSubClassOfAxiom(clsA, clsB);
+    //                    if (!exclude.contains(sca)) {
+                            
+                            addIfEntailed(sca, explanation, lemmas);
+    //                    }
+                        }
+                    }
+                }
+                // Existential supers
+                for (OWLObjectPropertyExpression prop : getObjectPropertiesInSignature(explanation)) {
+                    for (OWLClassExpression filler : getClassesInSignature(explanation)) {
+                        if (!filler.isOWLThing() && !filler.isOWLNothing()) {
+                            if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_OBJECT_SOME)) {
+                                OWLObjectSomeValuesFrom restriction = getDataFactory().getOWLObjectSomeValuesFrom(prop, filler);
+                                OWLSubClassOfAxiom ax = getDataFactory().getOWLSubClassOfAxiom(clsA, restriction);
+                                addIfEntailed(ax, explanation, lemmas);
+                            }
+
+                            if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_OBJECT_SOME_NOT)) {
+                                OWLObjectSomeValuesFrom negrestriction = getDataFactory().getOWLObjectSomeValuesFrom(prop, filler.getComplementNNF());
+                                OWLSubClassOfAxiom negax = getDataFactory().getOWLSubClassOfAxiom(clsA, negrestriction);
+                                addIfEntailed(negax, explanation, lemmas);
+                            }
+
+//                            OWLSubClassOfAxiom axnot = getDataFactory().getOWLSubClassOfAxiom(clsA, getDataFactory().getOWLObjectComplementOf(restriction));
+//                            addIfEntailed(axnot, explanation, lemmas);
+
+                        }
+                    }
+                }
+
+//            // Existential subs
+                if (prefs.isLemmaTypeEnabled(LemmaType.OBJECT_SOME_SUBCLASS_OF)) {
+//                    if (!clsA.isOWLThing()) {
+                        for (OWLObjectPropertyExpression prop : getObjectPropertiesInSignature(explanation)) {
+                            for (OWLClassExpression filler : getClassesInSignature(explanation)) {
+                                if (!filler.isOWLNothing()) {
+                                    OWLObjectSomeValuesFrom restriction = getDataFactory().getOWLObjectSomeValuesFrom(prop, filler);
+                                    OWLSubClassOfAxiom negax = getDataFactory().getOWLSubClassOfAxiom(restriction, clsA);
+                                    addIfEntailed(negax, explanation, lemmas);
+                                    OWLSubClassOfAxiom negax2 = getDataFactory().getOWLSubClassOfAxiom(restriction.getObjectComplementOf(), clsA);
+                                    addIfEntailed(negax2, explanation, lemmas);
+                                }
+                            }
+                        }
+//                    }
+                }
+
+                // Universals supers
+                    for (OWLObjectPropertyExpression prop : getObjectPropertiesInSignature(explanation)) {
+                        for (OWLClassExpression filler : getClassesInSignature(explanation)) {
+                            if (!filler.isOWLThing() && !clsA.isOWLThing() && !filler.isOWLNothing()) {
+                                // Don't duplicate property range axioms - look for "local ranges"
+                                OWLAxiom rangeAxiom = getDataFactory().getOWLObjectPropertyRangeAxiom(prop, filler);
+                                if (!isEntailedBy(rangeAxiom, explanation)) {
+                                    OWLObjectAllValuesFrom allRestriction = getDataFactory().getOWLObjectAllValuesFrom(prop, filler);
+                                    OWLSubClassOfAxiom ax = getDataFactory().getOWLSubClassOfAxiom(clsA, allRestriction);
+                                    OWLObjectAllValuesFrom toNothing = getDataFactory().getOWLObjectAllValuesFrom(prop, getDataFactory().getOWLNothing());
+                                    OWLSubClassOfAxiom trivAx = getDataFactory().getOWLSubClassOfAxiom(clsA, toNothing);
+                                    if (!isEntailedBy(trivAx, explanation) || filler.isOWLNothing()) {
+                                        if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_OBJECT_ALL)) {
+                                            addIfEntailed(ax, explanation, lemmas);
+                                        }
+                                        if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_OBJECT_ALL_NOT)) {
+//                                            OWLObjectAllValuesFrom negAllRestriction = getDataFactory().getOWLObjectAllValuesFrom(prop, getDataFactory().getOWLObjectComplementOf(filler));
+//                                            OWLSubClassOfAxiom negax = getDataFactory().getOWLSubClassOfAxiom(clsA, negAllRestriction);
+//                                            addIfEntailed(negax, explanation, lemmas);
+                                            for (OWLIndividual ind : getIndividualsInSignature(explanation)) {
+                                                addIfEntailed(getDataFactory().getOWLClassAssertionAxiom(allRestriction, ind), explanation, lemmas);
+                                            }
+                                        }
+
+                                    }
+                                    else {
+    //                                    System.out.println("SKIPPING: " + ax);
+                                    }
+
+
+                                }
+
+                            }
+                        }
+                    }
+//
+//                // Universal subs
+                if (prefs.isLemmaTypeEnabled(LemmaType.OBJECT_ALL_SUBCLASS_OF)) {
+                    for (OWLObjectPropertyExpression prop : getObjectPropertiesInSignature(explanation)) {
+                        for (OWLClassExpression filler : getClassesInSignature(explanation)) {
+                            if (!filler.isOWLThing() && !clsA.isOWLThing()) {
+                                OWLRestriction restriction = getDataFactory().getOWLObjectAllValuesFrom(prop, filler);
+                                OWLAxiom ax = getDataFactory().getOWLSubClassOfAxiom(restriction, clsA);
+                                addIfEntailed(ax, explanation, lemmas);
+                            }
+                        }
+                    }
+                }
+//
+
+                // HasValue
+                if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_OBJECT_HAS_VALUE)) {
+                    for (OWLObjectPropertyExpression prop : getObjectPropertiesInSignature(explanation)) {
+                        for (OWLIndividual ind : getIndividualsInSignature(explanation)) {
+                            OWLObjectHasValue r = getDataFactory().getOWLObjectHasValue(prop, ind);
+                            OWLAxiom ax = getDataFactory().getOWLSubClassOfAxiom(clsA, r);
+                            addIfEntailed(ax, explanation, lemmas);
+                        }
+                    }
+                }
+
+                // Class assertions
+                for (OWLIndividual ind : getIndividualsInSignature(explanation)) {
+                    if (prefs.isLemmaTypeEnabled(LemmaType.NAMED_CLASS_CLASS_ASSERTION)) {
+                        OWLClassAssertionAxiom ax = getDataFactory().getOWLClassAssertionAxiom(clsA, ind);
+                        if (!clsA.isOWLThing()) {
+                            addIfEntailed(ax, explanation, lemmas);
+                        }
+                    }
+
+                    if (prefs.isLemmaTypeEnabled(LemmaType.OBJECT_SOME_CLASS_ASSERTION)) {
+                        for (OWLObjectProperty prop : getObjectPropertiesInSignature(explanation)) {
+                            for (OWLClassExpression cls : getClassesInSignature(explanation)) {
+                                OWLClassExpression type = getDataFactory().getOWLObjectSomeValuesFrom(prop, cls);
+                                OWLAxiom ca = getDataFactory().getOWLClassAssertionAxiom(type, ind);
+                                addIfEntailed(ca, explanation, lemmas);
+                            }
+                        }
+                    }
+
+                    if (prefs.isLemmaTypeEnabled(LemmaType.OBJECT_ALL_CLASS_ASSERTION)) {
+                        for (OWLObjectProperty prop : getObjectPropertiesInSignature(explanation)) {
+                            for (OWLClassExpression cls : getClassesInSignature(explanation)) {
+                                OWLAxiom rangeAxiom = getDataFactory().getOWLObjectPropertyRangeAxiom(prop, cls);
+                                if (!isEntailedBy(rangeAxiom, explanation)) {
+                                    OWLClassExpression type = getDataFactory().getOWLObjectAllValuesFrom(prop, cls);
+                                    OWLAxiom ca = getDataFactory().getOWLClassAssertionAxiom(type, ind);
+                                    addIfEntailed(ca, explanation, lemmas);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                OWLObjectWalker<OWLAxiom> walker = new OWLObjectWalker<OWLAxiom>(explanation.getAxioms());
+                // Cardinalities
+                for (OWLAxiom ax : explanation.getAxioms()) {
+                    walker.walkStructure(new OWLObjectVisitorExAdapter<Void>() {
+                        public Void visit(OWLObjectMaxCardinality owlObjectMaxCardinality) {
+                            if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_OBJECT_MAX_CARDINALITY)) {
+                                for (OWLObjectProperty prop : getObjectPropertiesInSignature(explanation)) {
+                                    OWLAxiom ax = getDataFactory().getOWLSubClassOfAxiom(clsA, getDataFactory().getOWLObjectMaxCardinality(owlObjectMaxCardinality.getCardinality(), prop, owlObjectMaxCardinality.getFiller()));
+                                    addIfEntailed(ax, explanation, lemmas);
+                                }
+                            }
+                            return null;
+                        }
+
+                        public Void visit(OWLObjectMinCardinality owlObjectMinCardinality) {
+                            if (prefs.isLemmaTypeEnabled(LemmaType.SUBCLASS_OF_OBJECT_MIN_CARDINALITY)) {
+                                for (OWLObjectProperty prop : getObjectPropertiesInSignature(explanation)) {
+                                    OWLAxiom ax = getDataFactory().getOWLSubClassOfAxiom(clsA, getDataFactory().getOWLObjectMinCardinality(owlObjectMinCardinality.getCardinality(), prop, owlObjectMinCardinality.getFiller()));
+                                    addIfEntailed(ax, explanation, lemmas);
+                                }
+                            }
+                            return null;
+                        }
+                    });
+                }
+
+                if (prefs.isLemmaTypeEnabled(LemmaType.DISJOINT_CLASSES)) {
+                    for(OWLClassExpression otherCls : getClassesInSignature(explanation)) {
+                        if(!otherCls.equals(clsA) && !otherCls.isOWLThing() && !otherCls.isOWLNothing()) {
+                            OWLAxiom ax = getDataFactory().getOWLDisjointClassesAxiom(clsA, otherCls);
+                            addIfEntailed(ax, explanation, lemmas);
+                        }
+                    }
+                }
+
+//            if (!clsA.isOWLThing()) {
+//                OWLAxiom ax = getDataFactory().getOWLDisjointClassesAxiom(clsA, getDataFactory().getOWLThing());
+//                addIfEntailed(ax, explanation, lemmas);
+//            }
+
+            }
+
+            // Object property assertions
+            if (prefs.isLemmaTypeEnabled(LemmaType.OBJECT_PROPERTY_ASSERTION)) {
+                for (OWLIndividual subject : getIndividualsInSignature(explanation)) {
+                    for (OWLIndividual object : getIndividualsInSignature(explanation)) {
+                        for (OWLObjectProperty prop : getObjectPropertiesInSignature(explanation)) {
+                            OWLAxiom ax = getDataFactory().getOWLObjectPropertyAssertionAxiom(prop, subject, object);
+                            System.out.println(ax);
+                            addIfEntailed(ax, explanation, lemmas);
+                        }
+                    }
+                }
+            }
+
+            // Object property domains
+            if (prefs.isLemmaTypeEnabled(LemmaType.OBJECT_PROPERTY_DOMAIN)) {
+                for (OWLObjectProperty prop : getObjectPropertiesInSignature(explanation)) {
+                    for (OWLClassExpression cls : getClassesInSignature(explanation)) {
+                        OWLObjectPropertyDomainAxiom ax = getDataFactory().getOWLObjectPropertyDomainAxiom(prop, cls);
+                        addIfEntailed(ax, explanation, lemmas);
+                    }
+                }
+            }
+
+            // Object property ranges
+            if (prefs.isLemmaTypeEnabled(LemmaType.OBJECT_PROPERTY_RANGE)) {
+                for (OWLObjectProperty prop : getObjectPropertiesInSignature(explanation)) {
+                    for (OWLClassExpression cls : getClassesInSignature(explanation)) {
+                        if (!cls.isOWLThing()) {
+                            OWLObjectPropertyRangeAxiom ax = getDataFactory().getOWLObjectPropertyRangeAxiom(prop, cls);
+                            addIfEntailed(ax, explanation, lemmas);
+                        }
+                    }
+                }
+            }
+
+            if (prefs.isLemmaTypeEnabled(LemmaType.SUB_OBJECT_PROPERTY_OF)) {
+                for(OWLObjectProperty subProp : getObjectPropertiesInSignature(explanation)) {
+                    for(OWLObjectProperty supProp : getObjectPropertiesInSignature(explanation)) {
+                        if(!subProp.equals(supProp)) {
+                            OWLSubObjectPropertyOfAxiom ax = getDataFactory().getOWLSubObjectPropertyOfAxiom(subProp, supProp);
+                            addIfEntailed(ax, explanation, lemmas);
+                        }
+                    }
+                }
+            }
+            if(prefs.isLemmaTypeEnabled(LemmaType.SUB_OBJECT_PROPERTY_OF_INVERSE)) {
+                for(OWLObjectProperty subProp : getObjectPropertiesInSignature(explanation)) {
+                    for(OWLObjectProperty supProp : getObjectPropertiesInSignature(explanation)) {
+                        if(!subProp.equals(supProp)) {
+                            OWLSubObjectPropertyOfAxiom ax = getDataFactory().getOWLSubObjectPropertyOfAxiom(subProp, supProp.getInverseProperty());
+                            System.out.println("PropInv " + ax);
+                            addIfEntailed(ax, explanation, lemmas);
+                        }
+                    }
+                }
+            }
+            if(prefs.isLemmaTypeEnabled(LemmaType.INVERSE_SUB_OBJECT_PROPERTY_OF)) {
+                for(OWLObjectProperty subProp : getObjectPropertiesInSignature(explanation)) {
+                    for(OWLObjectProperty superProp : getObjectPropertiesInSignature(explanation)) {
+                        OWLSubObjectPropertyOfAxiom ax = getDataFactory().getOWLSubObjectPropertyOfAxiom(subProp.getInverseProperty(), superProp);
+                        addIfEntailed(ax, explanation, lemmas);
+                    }
+                }
+            }
+//
+            return lemmas;
+
+        }
+        catch (ExplanationException e) {
+            throw new RuntimeException(e);
+        }
+        catch (OWLOntologyCreationException e) {
+            throw new RuntimeException(e);
+        }
+        catch (OWLOntologyChangeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ExplanationGenerator<OWLAxiom> createExplanationGenerator(Explanation<E> explanation) {
+        return ExplanationManager.createLaconicExplanationGeneratorFactory(getReasonerFactory()).createExplanationGenerator(explanation.getAxioms());
+    }
+
+    //        // Optimisation
+//        // Just collapse chains of named subsumtions - we don't need to add in any intermediate steps
+//        Map<OWLClass, OWLClass> subClassChain = new HashMap<OWLClass, OWLClass>();
+//
+//        for (OWLAxiom ax : explanation.getAxioms()) {
+//            if (ax instanceof OWLSubClassOfAxiom) {
+//                OWLSubClassOfAxiom sca = (OWLSubClassOfAxiom) ax;
+//                if (!sca.getSubClass().isAnonymous() && !sca.getSuperClass().isAnonymous()) {
+//                    subClassChain.put(sca.getSubClass().asOWLClass(), sca.getSuperClass().asOWLClass());
+//                }
+//            }
+//        }
+//
+//        Set<OWLSubClassOfAxiom> exclude = new HashSet<OWLSubClassOfAxiom>();
+//        Set<OWLClass> added = new HashSet<OWLClass>();
+//        for (OWLClass cls : subClassChain.keySet()) {
+//            if (!subClassChain.containsValue(cls)) {
+//                added.clear();
+//                added.add(cls);
+//
+//                OWLClass sup = cls;
+//                while (subClassChain.get(sup) != null) {
+//                    sup = subClassChain.get(sup);
+//                    for (OWLClass addedSub : added) {
+//                        exclude.add(getDataFactory().getOWLSubClassOfAxiom(addedSub, sup));
+//                    }
+//                    added.add(sup);
+//                }
+//                OWLSubClassOfAxiom span = getDataFactory().getOWLSubClassOfAxiom(cls, sup);
+//                exclude.remove(span);
+//                addIfEntailed(span, explanation, lemmas);
+//            }
+//        }
+//
+//        lemmas.removeAll(exclude);
+//
+
+}

@@ -1,0 +1,171 @@
+package man.ac.uk;
+import java.awt.List;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.semanticweb.HermiT.*;
+import org.semanticweb.*;
+import org.semanticweb.owl.explanation.*;
+import org.semanticweb.owl.explanation.api.ConsoleExplanationProgressMonitor;
+import org.semanticweb.owl.explanation.api.Explanation;
+import org.semanticweb.owl.explanation.api.ExplanationGenerator;
+import org.semanticweb.owl.explanation.api.ExplanationGeneratorFactory;
+import org.semanticweb.owl.explanation.api.ExplanationManager;
+import org.semanticweb.owl.explanation.complexity.ComplexityCalculator;
+import org.semanticweb.owl.explanation.complexity.DefaultComplexityCalculator;
+import org.semanticweb.owl.explanation.complexity.LaconicGCIComplexityCalculator;
+import org.semanticweb.owl.explanation.complexity.ModalDepthComplexityCalculator;
+import org.semanticweb.owl.explanation.complexity.StructuralComplexityCalculator;
+import org.semanticweb.owl.explanation.impl.blackbox.EntailmentCheckerFactory;
+import org.semanticweb.owl.explanation.impl.blackbox.checker.SatisfiabilityEntailmentCheckerFactory;
+import org.semanticweb.owl.explanation.impl.laconic.LaconicExplanationGenerator;
+import org.semanticweb.owl.explanation.impl.laconic.LaconicExplanationGeneratorFactory;
+import org.semanticweb.owl.explanation.lemmas.*;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLAxiom;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLException;
+import org.semanticweb.owlapi.model.OWLInverseObjectPropertiesAxiom;
+import org.semanticweb.owlapi.model.OWLObjectComplementOf;
+import org.semanticweb.owlapi.model.OWLObjectInverseOf;
+import org.semanticweb.owlapi.model.OWLObjectProperty;
+import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
+import org.semanticweb.owlapi.model.OWLObjectUnionOf;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLOntologyManagerFactory;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
+import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
+public final class Test {
+
+	/**
+	 * @param args
+	 * @throws OWLException 
+	 */
+	public static void main(String[] args) throws OWLException {
+		// TODO Auto-generated method stub
+		OWLOntologyManager ontoman = OWLManager.createOWLOntologyManager();
+		OWLDataFactory df = OWLManager.getOWLDataFactory();
+		OWLReasonerFactory hermitfac = new StructuralReasonerFactory();
+		IRI subnnf = IRI.create("http://abstract.com/A");
+		IRI sup1nnf = IRI.create("http://abstract.com/B");
+		IRI sup2nnf = IRI.create("http://abstract.com/C");
+		OWLClass A = df.getOWLClass(subnnf);
+		OWLClass B = df.getOWLClass(sup1nnf);
+		OWLClass C = df.getOWLClass(sup2nnf);
+		OWLClass D = df.getOWLClass(IRI.create("http://abstract.com/D"));
+		OWLClass E = df.getOWLClass(IRI.create("http://abstract.com/E"));
+		OWLObjectUnionOf OR = df.getOWLObjectUnionOf(B,C);
+		
+		OWLSubClassOfAxiom SUB = df.getOWLSubClassOfAxiom(A,B);
+		OWLSubClassOfAxiom SUB2 = df.getOWLSubClassOfAxiom(B,C);
+		OWLSubClassOfAxiom SUB3 = df.getOWLSubClassOfAxiom(C,D);
+		OWLObjectProperty R = df.getOWLObjectProperty(IRI.create("http://abstract.com/R"));
+		OWLObjectProperty P = df.getOWLObjectProperty(IRI.create("http://abstract.com/P"));
+		OWLObjectPropertyDomainAxiom DOM = df.getOWLObjectPropertyDomainAxiom(R,E);
+		OWLObjectPropertyRangeAxiom RAN = df.getOWLObjectPropertyRangeAxiom(R,D);
+		OWLInverseObjectPropertiesAxiom INV = df.getOWLInverseObjectPropertiesAxiom(R,P);
+		
+		
+		HashSet<OWLAxiom> JUST = new HashSet<OWLAxiom>();
+		JUST.add(SUB);
+		JUST.add(SUB2);
+		JUST.add(SUB3);
+		JUST.add(DOM);
+		JUST.add(RAN);
+		JUST.add(INV);
+		OWLSubClassOfAxiom ENT = df.getOWLSubClassOfAxiom(A, df.getOWLObjectSomeValuesFrom(P, E));
+		System.out.println("Check NNF form via convinence:");
+		System.out.println("Original: " + SUB);
+		System.out.println("NNF: " + SUB.getNNF());
+		Explanation<OWLAxiom> exp = new Explanation<OWLAxiom>(ENT,JUST);
+		ExplanationGeneratorFactory<OWLAxiom> egf = ExplanationManager.createExplanationGeneratorFactory(hermitfac);
+		LaconicExplanationGeneratorFactory<OWLAxiom> legf = new LaconicExplanationGeneratorFactory<OWLAxiom>(egf);
+		DefaultComplexityCalculator dcg = new DefaultComplexityCalculator(hermitfac);
+		LaconicGCIComplexityCalculator lgcc = new LaconicGCIComplexityCalculator(hermitfac);
+		ModalDepthComplexityCalculator mdcc = new ModalDepthComplexityCalculator();
+	
+		StructuralComplexityCalculator scc = new StructuralComplexityCalculator();
+		EntailmentCheckerFactory<OWLAxiom> ecf = new SatisfiabilityEntailmentCheckerFactory(hermitfac);
+		LemmatisedJustificationGenerator ljg = new LemmatisedJustificationGenerator(lgcc,ecf,hermitfac,df);
+		System.out.println(JUST);
+		HashSet<OWLAxiom> empty = new HashSet<OWLAxiom>();
+		System.out.println(mdcc.computeComplexity(exp, ENT, empty));
+		Explanation<OWLAxiom> lemmaexp = ljg.getLemmatisedExplanation(exp, JUST);
+		System.out.println(lemmaexp.getAxioms());
+		/**
+		IRI subIRI = IRI.create("http://purl.obolibrary.org/obo/OBI_0001573");
+		IRI supIRI = IRI.create("http://purl.obolibrary.org/obo/BFO_0000004");
+		OWLClass sub = df.getOWLClass(subIRI);
+		OWLClass sup = df.getOWLClass(supIRI);
+		OWLSubClassOfAxiom sb = df.getOWLSubClassOfAxiom(sub, sup);
+		File file = new File ("/home/michael/justifications/bco/OBI_0001573_BFO_0000004/hermit/just_8_hermit_OBI_0001573_BFO_0000004_1429882212138.owl");
+		try {
+			OWLOntology justonto = ontoman.loadOntologyFromOntologyDocument(file);
+			Set<OWLAxiom> just = justonto.getAxioms();
+			System.out.println("Printing original just:");
+			for(OWLAxiom as:just)
+			{
+				System.out.println(as);
+			}
+			System.out.println("");
+			Explanation<OWLAxiom> exp = new Explanation<OWLAxiom>(sb,just);
+			ExplanationGeneratorFactory<OWLAxiom> egf = ExplanationManager.createExplanationGeneratorFactory(hermitfac);
+			LaconicExplanationGeneratorFactory<OWLAxiom> legf = new LaconicExplanationGeneratorFactory<OWLAxiom>(egf);
+			//LemmaGeneratorManager<OWLAxiom> lgm = new LemmaGeneratorManager<OWLAxiom>(hermitfac,df);
+			//java.util.List<LemmaGenerator<OWLAxiom>> lg = lgm.getGenerators(exp, legf);
+			ExistentialRestrictionLemmaGenerator<OWLAxiom> nlg = new ExistentialRestrictionLemmaGenerator<OWLAxiom>(exp,egf,hermitfac,df);
+			Set<Lemma> lemmaset = nlg.getCandidateLemmas();
+			System.out.println("Printing candidate lemmas of just:");
+			System.out.println(lemmaset);
+			/** Set<OWLAxiom> lemmas = dclg.getCandidateLemmas(exp);
+			System.out.println("Printing candidate lemmas of just:");
+			for(OWLAxiom ax:lemmas)
+			{
+				System.out.println(ax);
+			}
+			System.out.println("");
+			lemmas.removeAll(just);
+			System.out.println("Printing lemmatised just without orignal axioms:");
+			for(OWLAxiom ax: lemmas)
+			{
+				System.out.println(ax);
+			}
+			System.out.println("");
+			System.out.println("Entailment:");
+			System.out.println(exp.getEntailment());		**/	
+			
+			/**
+			ExplanationGeneratorFactory<OWLAxiom> egf = ExplanationManager.createExplanationGeneratorFactory(hermitfac);
+			LaconicExplanationGeneratorFactory<OWLAxiom> legf = new LaconicExplanationGeneratorFactory<OWLAxiom>(egf);
+			ComplexityCalculator calc = new LaconicGCIComplexityCalculator(hermitfac);
+			LemmaGeneratorManager<OWLAxiom> lgm = new LemmaGeneratorManager<OWLAxiom>(hermitfac, df);
+			System.out.println("Generating lemmas: ");
+			Set<Lemma> lemmaset = lgm.getLemmas(exp, legf);
+			**/
+			
+			//LaconicExplanationGenerator<OWLAxiom> leg = new LaconicExplanationGenerator<OWLAxiom>(just,legf,cepm);
+			//Set<Explanation<OWLAxiom>> lexpset = leg.computePreciseJusts(sb, 1);
+		/**
+			for(Lemma ex: lemmaset)
+			{
+				System.out.println("Lemma: "+ ex.getLemma());
+				System.out.println("Axiom: "+ ex.getAxioms());
+			}
+		} catch (OWLOntologyCreationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		**/
+	}
+
+}
