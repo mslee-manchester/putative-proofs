@@ -48,6 +48,8 @@ import org.semanticweb.owlapi.reasoner.OWLReasonerConfiguration;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.owlapi.reasoner.ReasonerProgressMonitor;
 
+import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
+
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
 import uk.ac.manchester.cs.jfact.JFactFactory;
 
@@ -74,12 +76,13 @@ public final class Test {
 		// TODO Auto-generated method stub
 		OWLOntologyManager ontoman = OWLManager.createOWLOntologyManager();
 		OWLDataFactory df = OWLManager.getOWLDataFactory();
-		ReasonerFactory hermitfac = new ReasonerFactory();
-		//FaCTPlusPlusReasonerFactory factfac = new FaCTPlusPlusReasonerFactory();
-		JFactFactory jfactfac = new JFactFactory();
+		OWLReasonerFactory hermitfac = new ReasonerFactory();
+		OWLReasonerFactory pelletfac = new PelletReasonerFactory();
+		OWLReasonerFactory factfac = new FaCTPlusPlusReasonerFactory();
+		OWLReasonerFactory jfactfac = new JFactFactory();
 		
 		
-		File file = new File("/home/michael/corpus/stato/just_3_jfact_STATO_0000073_BFO_0000003_1430089501169.owl");
+		File file = new File("/home/michael/corpus/cao/just_5_hermit_CAO_0000324_CAO_0000323_1429892451144.owl");
 		OWLOntology onto = ontoman.loadOntologyFromOntologyDocument(file);
 		//Set<OWLAxiom> JUST = onto.getAxioms();
 		
@@ -92,8 +95,9 @@ public final class Test {
 		Explanation<OWLAxiom> exp = new Explanation<OWLAxiom>(trans,JUST);
 		**/
 		
-		OWLClass SUB = df.getOWLClass(IRI.create("http://purl.obolibrary.org/obo/STATO_0000073"));
-		OWLClass SUP = df.getOWLClass(IRI.create("http://purl.obolibrary.org/obo/BFO_0000003"));
+		
+		OWLClass SUB = df.getOWLClass(IRI.create("http://purl.obolibrary.org/obo/CAO_0000324"));
+		OWLClass SUP = df.getOWLClass(IRI.create("http://purl.obolibrary.org/obo/CAO_0000323"));
 		OWLSubClassOfAxiom ENT = df.getOWLSubClassOfAxiom(SUB,SUP);
 		Set<OWLAxiom> JUST = new HashSet<OWLAxiom>();
 		for(OWLAxiom ax:onto.getAxioms()){
@@ -390,12 +394,15 @@ public final class Test {
 		//System.out.println(ljg.getLemmatisedExplanation(exp, JUST));
 		
 		
-		ProofGenerator pg = new ProofGenerator(jfactfac,kcc, df, ecf);
+		ProofGenerator pg = new ProofGenerator(hermitfac,kcc, df, ecf);
 		
 		Proof pr = pg.generateProof(exp);		
 		System.out.print(pr);
+		
+		
 		Set<OWLReasonerFactory> set = new HashSet<OWLReasonerFactory>();
 		set.add(hermitfac);
+		set.add(pelletfac);
 		set.add(jfactfac);
 		//set.add(factfac);
 		PutativeProofGenerator ppg = new PutativeProofGenerator(set);

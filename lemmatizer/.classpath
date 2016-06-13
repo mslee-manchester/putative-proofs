@@ -8,5 +8,6 @@
 	<classpathentry kind="lib" path="/home/michael/Downloads/FaCTpp-OWLAPI-3.x-v1.6.4.jar"/>
 	<classpathentry kind="lib" path="/home/michael/Downloads/jfact-1.2.3.jar (OWLAPI 3.5.0 and Protege plugin)"/>
 	<classpathentry kind="lib" path="/home/michael/Downloads/pellet-distribution-2.3.2-SNAPSHOT-dist.zip"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/pellet"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

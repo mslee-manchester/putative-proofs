@@ -23,10 +23,13 @@ public class PutativeProof extends Proof {
 	}
 	
 	public void produceDisagreements(){
-		
+		if(disagreements.isEmpty())
+		{
+			System.out.println("No disagreements");
+			System.out.println("");
+		}
 		for(OWLAxiom ax:disagreements.keySet())
 		{
-			System.out.println(this.getRegularJustification(ax));
 			System.out.println(disagreements.get(ax));
 			System.out.println("");
 		}

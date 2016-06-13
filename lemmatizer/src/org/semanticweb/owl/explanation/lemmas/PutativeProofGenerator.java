@@ -26,11 +26,11 @@ public class PutativeProofGenerator {
 	public PutativeProof producePutativeProof(Proof pr) throws OWLOntologyCreationException{
 		Set<OWLAxiom> putativeLemmas = pr.getMap().keySet();
 		OWLOntologyManager ontoman = OWLManager.createOWLOntologyManager();
-		ArrayList<String> ayes = new ArrayList<String>();
-		ArrayList<String> nays = new ArrayList<String>();
 		Map<OWLAxiom, String> disagreements = new HashMap<OWLAxiom,String>();
 		for(OWLAxiom ax:putativeLemmas)
 		{
+			ArrayList<String> ayes = new ArrayList<String>();
+			ArrayList<String> nays = new ArrayList<String>();
 			Explanation<OWLAxiom> exp = pr.getExplanation(ax);
 			OWLOntology ont = ontoman.createOntology(exp.getAxioms());
 			for(OWLReasonerFactory reasonerFactory:reasoners)
@@ -57,8 +57,6 @@ public class PutativeProofGenerator {
 				}
 				reasonerClassify.dispose();
 			}
-			System.out.println(ayes);
-			System.out.println(nays);
 			if(!ayes.isEmpty() && !nays.isEmpty())
 			{
 				String disagreement = "Yes: ";
@@ -66,7 +64,7 @@ public class PutativeProofGenerator {
 				{
 					disagreement = disagreement.concat(s + " ");
 				}
-				disagreement = disagreement.concat("No:");
+				disagreement = disagreement.concat("No: ");
 				for(String s:nays)
 				{
 					disagreement = disagreement.concat(s + " ");

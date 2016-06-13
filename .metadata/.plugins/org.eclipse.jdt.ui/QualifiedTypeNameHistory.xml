@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLOntologyManagerFactory"/>
-<fullyQualifiedTypeName name="org.semanticweb.owlapi.apibinding.OWLManager"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLDataFactory"/>
-<fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.OWLReasonerFactory"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory"/>
-<fullyQualifiedTypeName name="java.util.Set"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLClass"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLSubClassOfAxiom"/>
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.api.ExplanationGenerator"/>
-<fullyQualifiedTypeName name="org.semanticweb.owl.explanation.api.Explanation"/>
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.complexity.ComplexityCalculator"/>
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.api.ConsoleExplanationProgressMonitor"/>
-<fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.OWLReasoner"/>
 <fullyQualifiedTypeName name="java.awt.List"/>
-<fullyQualifiedTypeName name="java.util.ArrayList"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLObjectUnionOf"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLObjectComplementOf"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLObjectProperty"/>
@@ -22,13 +16,9 @@
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLObjectInverseOf"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom"/>
-<fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLOntologyManager"/>
-<fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLAxiom"/>
 <fullyQualifiedTypeName name="java.io.File"/>
-<fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLOntology"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.IRI"/>
 <fullyQualifiedTypeName name="com.clarkparsia.protege.plugin.pellet.PelletReasonerFactory"/>
-<fullyQualifiedTypeName name="com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory"/>
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.lemmas.LemmatisedJustificationGenerator"/>
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.impl.blackbox.EntailmentCheckerFactory"/>
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.complexity.StructuralComplexityCalculator"/>
@@ -50,8 +40,23 @@
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.impl.laconic.LaconicExplanationGenerator"/>
 <fullyQualifiedTypeName name="org.semanticweb.owl.explanation.lemmas.DefaultCandidateLemmaGenerator"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.ConsoleProgressMonitor"/>
-<fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.InferenceType"/>
 <fullyQualifiedTypeName name="uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory"/>
 <fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom"/>
 <fullyQualifiedTypeName name="java.lang.System"/>
+<fullyQualifiedTypeName name="java.util.Set"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLAxiom"/>
+<fullyQualifiedTypeName name="org.semanticweb.owl.explanation.api.Explanation"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.apibinding.OWLManager"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLOntologyManager"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.model.OWLOntology"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.OWLReasoner"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="java.util.HashMap"/>
+<fullyQualifiedTypeName name="java.util.Map"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.OWLReasonerFactory"/>
+<fullyQualifiedTypeName name="org.semanticweb.owl.explanation.lemmas.PutativeProofGenerator"/>
+<fullyQualifiedTypeName name="org.semanticweb.owl.explanation.lemmas.PutativeProof"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.reasoner.InferenceType"/>
+<fullyQualifiedTypeName name="org.semanticweb.owlapi.model.AxiomType"/>
+<fullyQualifiedTypeName name="com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory"/>
 </qualifiedTypeNameHistroy>

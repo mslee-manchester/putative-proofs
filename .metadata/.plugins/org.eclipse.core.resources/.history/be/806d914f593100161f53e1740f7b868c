@@ -1,0 +1,87 @@
+package org.semanticweb.owl.explanation.lemmas;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.semanticweb.owl.explanation.api.Explanation;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.OWLAxiom;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.reasoner.InferenceType;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
+
+public class PutativeProofGenerator {
+
+	private Set<OWLReasonerFactory> reasoners;
+	
+	public PutativeProofGenerator(Set<OWLReasonerFactory> reasoners){
+		this.reasoners = reasoners;
+		}
+	
+	public PutativeProof producePutativeProof(Proof pr) throws OWLOntologyCreationException{
+		Set<OWLAxiom> putativeLemmas = pr.getMap().keySet();
+		OWLOntologyManager ontoman = OWLManager.createOWLOntologyManager();
+		ArrayList<String> ayes = new ArrayList<String>();
+		ArrayList<String> nays = new ArrayList<String>();
+		Map<OWLAxiom, String> disagreements = new HashMap<OWLAxiom,String>();
+		for(OWLAxiom ax:putativeLemmas)
+		{
+			Explanation<OWLAxiom> exp = pr.getExplanation(ax);
+			OWLOntology ont = ontoman.createOntology(exp.getAxioms());
+			for(OWLReasonerFactory reasonerFactory:reasoners)
+			{
+				OWLReasoner reasoner = reasonerFactory.createReasoner(ont);
+				if(reasoner.isEntailed(exp.getEntailment()))
+				{
+					ayes.add(reasonerFactory.getReasonerName());
+				}
+				else
+				{
+					nays.add(reasonerFactory.getReasonerName());
+				}
+				reasoner.dispose();
+				OWLReasoner reasonerClassify = reasonerFactory.createReasoner(ont);
+				reasonerClassify.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+				if(reasonerClassify.isEntailed(exp.getEntailment()))
+				{
+					ayes.add(reasonerFactory.getReasonerName() + "CLASSIFY");
+				}
+				else
+				{
+					nays.add(reasonerFactory.getReasonerName() + "CLASSIFY");
+				}
+				reasonerClassify.dispose();
+			}
+			System.out.println(ayes);
+			System.out.println(nays);
+			if(!ayes.isEmpty() && !nays.isEmpty())
+			{
+				String disagreement = "Yes: ";
+				for(String s:ayes)
+				{
+					disagreement = disagreement.concat(s + " ");
+				}
+				disagreement = disagreement.concat("No:");
+				for(String s:nays)
+				{
+					disagreement = disagreement.concat(s + " ");
+				}
+				disagreements.put(ax, disagreement);
+			}
+		}
+		if(!disagreements.isEmpty())
+		{
+			PutativeProof ppr = new PutativeProof(pr.getOriginalJustification(), pr.getMap(), pr.getRegularJustifications(), disagreements);
+			return ppr;
+		}
+		else{
+			System.out.println("Making null");
+			return null;
+		}
+	}
+}
