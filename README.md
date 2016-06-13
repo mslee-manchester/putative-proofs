@@ -1,5 +1,6 @@
 -TO DO:
--Fix bug that causes initial justification to be eliminated
+-Fix bug that causes initial justification to be eliminated (DONE)
+-Fix bug with eliminated justifications
 -Decide suitable output for fully agreed upon proofs
 -Produce proof equal method
 -GUI display for putative proofs
